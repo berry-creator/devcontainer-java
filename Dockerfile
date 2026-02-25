@@ -124,6 +124,16 @@ RUN mkdir -p ~/apps && cd ~/apps \
 ENV M2_HOME=/home/${USERNAME}/apps/apache-maven-3.9.9
 #endregion
 
+#region Download palantir-java-format-all-deps for some ide extensions to work properly
+USER ${USERNAME}
+ARG PALANTIR_VERSION=2.84.0
+RUN echo "==> Start to download palantir-java-format-all-deps-${PALANTIR_VERSION}.jar" \
+    && curl -fsSL "https://github.com/berry-creator/palantir-java-format-all-deps/releases/download/${PALANTIR_VERSION}/palantir-java-format-all-deps-${PALANTIR_VERSION}.jar" -o "/home/${USERNAME}/palantir-java-format-all-deps-${PALANTIR_VERSION}.jar" \
+    && echo "java -jar ~/palantir-java-format-all-deps-${PALANTIR_VERSION}.jar --format-javadoc \"\$@\"" > /home/${USERNAME}/palantir-cli.sh \
+    && chmod +x /home/${USERNAME}/palantir-cli.sh \
+    && echo "==> palantir-java-format-all-deps-${PALANTIR_VERSION}.jar downloaded and palantir-cli.sh created"
+#endregion
+
 # Switch to dev user
 USER ${USERNAME}
 WORKDIR /home/${USERNAME}/workspace
