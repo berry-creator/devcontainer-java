@@ -55,25 +55,6 @@ USER ${USERNAME}
 RUN sed -i '3i\export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH' ~/.zshrc
 #endregion
 
-#region Add custom functions
-USER ${USERNAME}
-RUN cat << 'EOF' >> ~/.zshrc
-
-install_claude() {
-  set -e
-
-  if command -v claude >/dev/null 2>&1; then
-    echo "✓ Claude CLI already installed, skipping installation"
-    return 0
-  fi
-
-  echo "▶ Installing Claude CLI..."
-  curl -fsSL https://claude.ai/install.sh | bash
-  echo "✓ Claude CLI ready, type command 'claude' to start using it"
-}
-EOF
-#endregion
-
 #region Install JDK and set up env
 USER ${USERNAME}
 ARG JDK_X86_64_DOWNLOAD_URL=https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_linux-x64_bin.tar.gz
@@ -133,13 +114,80 @@ RUN echo "==> Start to download palantir-java-format-all-deps-${PALANTIR_VERSION
     && echo "==> palantir-java-format-all-deps-${PALANTIR_VERSION}.jar downloaded and palantir-cli.sh created"
 #endregion
 
-#region Install claude cli if needed
+#region Add custom functions
+USER ${USERNAME}
+RUN cat << 'EOF' >> ~/.zshrc
+
+install_claude() {
+  set -e
+
+  if command -v claude >/dev/null 2>&1; then
+    echo "✓ Claude CLI already installed, skipping installation"
+    return 0
+  fi
+
+  echo "▶ Installing Claude CLI..."
+  curl -fsSL https://claude.ai/install.sh | bash
+  jq '. + {"hasCompletedOnboarding": true}' ~/.claude.json
+  echo "✓ Claude CLI ready, type command 'claude' to start using it"
+}
+
+install_nodejs() {
+    set -e
+    
+    if command -v node >/dev/null 2>&1; then
+        echo "✓ Node.js already installed, skipping installation"
+        return 0
+    fi
+    
+    echo "▶ Installing Node.js using nvm..."
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | PROFILE="/home/${USERNAME}/.zshrc" bash
+    echo "" >> ~/.zshrc
+    echo 'export NVM_DIR="$HOME/.nvm"' >> ~/.zshrc
+    echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm' >> ~/.zshrc
+    echo '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion' >> ~/.zshrc
+    source ~/.zshrc
+    nvm install --lts
+    echo "✓ Node.js installation completed, version: $(node --version)"
+}
+
+install_gemini_cli() {
+    set -e
+
+    if ! command -v node >/dev/null 2>&1; then
+        echo "Node.js is required to install Gemini CLI. Installing Node.js first..."
+        install_nodejs
+    fi
+    
+    if command -v gemini >/dev/null 2>&1; then
+        echo "✓ Gemini CLI already installed, skipping installation"
+        return 0
+    fi
+    
+    echo "▶ Installing Gemini CLI..."
+    npm install -g @google/gemini-cli
+    echo "✓ Gemini CLI ready, type command 'gemini' to start using it"
+}
+EOF
+#endregion
+
+#region Install Claude CLI if needed
 ARG CLAUDE_PREINSTALLED=false
 USER ${USERNAME}
 RUN if [ "${CLAUDE_PREINSTALLED}" = "true" ]; then \
       echo "==> CLAUDE_PREINSTALLED is set to true, installing Claude CLI..." \
       && source ~/.zshrc \
       && install_claude; \
+    fi
+#endregion
+
+#region Install Gemini CLI if needed
+ARG GEMINI_PREINSTALLED=false
+USER ${USERNAME}
+RUN if [ "${GEMINI_PREINSTALLED}" = "true" ]; then \
+      echo "==> GEMINI_PREINSTALLED is set to true, installing Gemini CLI..." \
+      && source ~/.zshrc \
+      && install_gemini_cli; \
     fi
 #endregion
 

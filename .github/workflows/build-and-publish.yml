@@ -15,26 +15,26 @@ jobs:
     
     steps:
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@v5
 
       - name: Generate App Version
         run: echo APP_VERSION=`git describe --tags --always` >> $GITHUB_ENV
       
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@master
+        uses: docker/setup-qemu-action@v3
       
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@master
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
-        uses: docker/login-action@master
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           
-      - name: Build and push (No Claude preinstalled)
+      - name: Build and push (No Claude/Gemini CLI preinstalled)
         id: build-and-push
-        uses: docker/build-push-action@master
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
@@ -45,9 +45,9 @@ jobs:
           tags: |
             ${{ env.DOCKERHUB_REPO }}:${{ env.APP_VERSION }}
           
-      - name: Build and push (Claude preinstalled)
+      - name: Build and push (Only Claude preinstalled)
         id: build-and-push-with-claude
-        uses: docker/build-push-action@master
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
@@ -60,3 +60,36 @@ jobs:
             ${{ env.DOCKERHUB_REPO }}:${{ env.APP_VERSION }}-claude
           build-args: |
             CLAUDE_PREINSTALLED=true
+
+      - name: Build and push (Only Gemini preinstalled)
+        id: build-and-push-with-gemini
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          platforms: |
+            linux/amd64
+            linux/arm64
+          tags: |
+            ${{ env.DOCKERHUB_REPO }}:latest
+            ${{ env.DOCKERHUB_REPO }}:${{ env.APP_VERSION }}-gemini
+          build-args: |
+            GEMINI_PREINSTALLED=true
+
+      - name: Build and push (Both Claude and Gemini preinstalled)
+        id: build-and-push-with-claude-and-gemini
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          platforms: |
+            linux/amd64
+            linux/arm64
+          tags: |
+            ${{ env.DOCKERHUB_REPO }}:latest
+            ${{ env.DOCKERHUB_REPO }}:${{ env.APP_VERSION }}-claude-gemini
+          build-args: |
+            CLAUDE_PREINSTALLED=true
+            GEMINI_PREINSTALLED=true
