@@ -168,6 +168,24 @@ install_gemini_cli() {
     npm install -g @google/gemini-cli
     echo "✓ Gemini CLI ready, type command 'gemini' to start using it"
 }
+
+install_codex() {
+    set -e
+
+    if ! command -v node >/dev/null 2>&1; then
+        echo "Node.js is required to install Codex CLI. Installing Node.js first..."
+        install_nodejs
+    fi
+
+    if command -v codex >/dev/null 2>&1; then
+        echo "✓ Codex CLI already installed, skipping installation"
+        return 0
+    fi
+
+    echo "▶ Installing Codex CLI..."
+    npm install -g @openai/codex
+    echo "✓ Codex CLI ready, type command 'codex' to start using it"
+}
 EOF
 #endregion
 
@@ -191,6 +209,15 @@ RUN if [ "${GEMINI_PREINSTALLED}" = "true" ]; then \
     fi
 #endregion
 
+#region Install Codex CLI if needed
+ARG CODEX_PREINSTALLED=false
+USER ${USERNAME}
+RUN if [ "${CODEX_PREINSTALLED}" = "true" ]; then \
+      echo "==> CODEX_PREINSTALLED is set to true, installing Codex CLI..." \
+      && source ~/.zshrc \
+      && install_codex; \
+    fi
+#endregion
 
 # Switch to dev user
 USER ${USERNAME}

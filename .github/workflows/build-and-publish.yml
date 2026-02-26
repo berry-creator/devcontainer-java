@@ -77,6 +77,22 @@ jobs:
           build-args: |
             GEMINI_PREINSTALLED=true
 
+      - name: Build and push (Only Codex preinstalled)
+        id: build-and-push-with-codex
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          platforms: |
+            linux/amd64
+            linux/arm64
+          tags: |
+            ${{ env.DOCKERHUB_REPO }}:latest
+            ${{ env.DOCKERHUB_REPO }}:${{ env.APP_VERSION }}-codex
+          build-args: |
+            CODEX_PREINSTALLED=true
+
       - name: Build and push (Both Claude and Gemini preinstalled)
         id: build-and-push-with-claude-and-gemini
         uses: docker/build-push-action@v6
@@ -93,3 +109,21 @@ jobs:
           build-args: |
             CLAUDE_PREINSTALLED=true
             GEMINI_PREINSTALLED=true
+
+      - name: Build and push (Both Claude, Gemini and Codex preinstalled)
+        id: build-and-push-with-claude-gemini-codex
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          platforms: |
+            linux/amd64
+            linux/arm64
+          tags: |
+            ${{ env.DOCKERHUB_REPO }}:latest
+            ${{ env.DOCKERHUB_REPO }}:${{ env.APP_VERSION }}-claude-gemini-codex
+          build-args: |
+            CLAUDE_PREINSTALLED=true
+            GEMINI_PREINSTALLED=true
+            CODEX_PREINSTALLED=true
