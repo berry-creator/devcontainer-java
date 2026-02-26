@@ -9,7 +9,6 @@ RUN apt-get update && apt-get upgrade -y \
         procps inetutils-ping telnet neovim jq exiftool libxml2-utils zsh \
         git curl wget tar gzip zip mariadb-client \
         ca-certificates sudo locales chromium \
-    && wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq && chmod +x /usr/bin/yq \
     && apt-get autoremove -y && apt-get clean -y \
     && echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && locale-gen \
     && ln -fs /usr/share/zoneinfo/${TZ} /etc/localtime \
@@ -133,6 +132,17 @@ RUN echo "==> Start to download palantir-java-format-all-deps-${PALANTIR_VERSION
     && chmod +x /home/${USERNAME}/palantir-cli.sh \
     && echo "==> palantir-java-format-all-deps-${PALANTIR_VERSION}.jar downloaded and palantir-cli.sh created"
 #endregion
+
+#region Install claude cli if needed
+ARG CLAUDE_PREINSTALLED=false
+USER ${USERNAME}
+RUN if [ "${CLAUDE_PREINSTALLED}" = "true" ]; then \
+      echo "==> CLAUDE_PREINSTALLED is set to true, installing Claude CLI..." \
+      && source ~/.zshrc \
+      && install_claude; \
+    fi
+#endregion
+
 
 # Switch to dev user
 USER ${USERNAME}

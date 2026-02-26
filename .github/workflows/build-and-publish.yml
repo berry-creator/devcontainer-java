@@ -32,8 +32,21 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           
-      - name: Build and push
-        id: docker_build
+      - name: Build and push (No Claude preinstalled)
+        id: build-and-push
+        uses: docker/build-push-action@master
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          platforms: |
+            linux/amd64
+            linux/arm64
+          tags: |
+            ${{ env.DOCKERHUB_REPO }}:${{ env.APP_VERSION }}
+          
+      - name: Build and push (Claude preinstalled)
+        id: build-and-push-with-claude
         uses: docker/build-push-action@master
         with:
           context: .
@@ -44,5 +57,6 @@ jobs:
             linux/arm64
           tags: |
             ${{ env.DOCKERHUB_REPO }}:latest
-            ${{ env.DOCKERHUB_REPO }}:${{ env.APP_VERSION }}
-          
+            ${{ env.DOCKERHUB_REPO }}:${{ env.APP_VERSION }}-claude
+          build-args: |
+            CLAUDE_PREINSTALLED=true
