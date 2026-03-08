@@ -32,7 +32,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           
-      - name: Build and push (No Claude/Gemini CLI preinstalled)
+      - name: Build and push (No Claude/Codex/Gemini CLI preinstalled)
         id: build-and-push
         uses: docker/build-push-action@v6
         with:
@@ -59,6 +59,7 @@ jobs:
             ${{ env.DOCKERHUB_REPO }}:latest
             ${{ env.DOCKERHUB_REPO }}:${{ env.APP_VERSION }}-claude
           build-args: |
+            PYTHON_PREINSTALLED=true
             CLAUDE_PREINSTALLED=true
 
       - name: Build and push (Only Gemini preinstalled)
@@ -75,6 +76,7 @@ jobs:
             ${{ env.DOCKERHUB_REPO }}:latest
             ${{ env.DOCKERHUB_REPO }}:${{ env.APP_VERSION }}-gemini
           build-args: |
+            PYTHON_PREINSTALLED=true
             GEMINI_PREINSTALLED=true
 
       - name: Build and push (Only Codex preinstalled)
@@ -91,6 +93,7 @@ jobs:
             ${{ env.DOCKERHUB_REPO }}:latest
             ${{ env.DOCKERHUB_REPO }}:${{ env.APP_VERSION }}-codex
           build-args: |
+            PYTHON_PREINSTALLED=true
             CODEX_PREINSTALLED=true
 
       - name: Build and push (Both Claude and Gemini preinstalled)
@@ -107,6 +110,7 @@ jobs:
             ${{ env.DOCKERHUB_REPO }}:latest
             ${{ env.DOCKERHUB_REPO }}:${{ env.APP_VERSION }}-claude-gemini
           build-args: |
+            PYTHON_PREINSTALLED=true
             CLAUDE_PREINSTALLED=true
             GEMINI_PREINSTALLED=true
 
@@ -124,6 +128,7 @@ jobs:
             ${{ env.DOCKERHUB_REPO }}:latest
             ${{ env.DOCKERHUB_REPO }}:${{ env.APP_VERSION }}-claude-gemini-codex
           build-args: |
+            PYTHON_PREINSTALLED=true
             CLAUDE_PREINSTALLED=true
             GEMINI_PREINSTALLED=true
             CODEX_PREINSTALLED=true

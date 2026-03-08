@@ -9,6 +9,9 @@ RUN apt-get update && apt-get upgrade -y \
         procps inetutils-ping telnet neovim jq exiftool libxml2-utils zsh \
         git curl wget tar gzip zip mariadb-client \
         ca-certificates sudo locales chromium \
+        make build-essential libssl-dev zlib1g-dev \
+        libbz2-dev libreadline-dev libsqlite3-dev curl git \
+        libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev \
     && apt-get autoremove -y && apt-get clean -y \
     && echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && locale-gen \
     && ln -fs /usr/share/zoneinfo/${TZ} /etc/localtime \
@@ -118,18 +121,23 @@ RUN echo "==> Start to download palantir-java-format-all-deps-${PALANTIR_VERSION
 USER ${USERNAME}
 RUN cat << 'EOF' >> ~/.zshrc
 
-install_claude() {
-  set -e
+install_python() {
+    set -e
 
-  if command -v claude >/dev/null 2>&1; then
-    echo "✓ Claude CLI already installed, skipping installation"
-    return 0
-  fi
+    if command -v python >/dev/null 2>&1; then
+        echo "✓ Python already installed, skipping installation"
+        return 0
+    fi
 
-  echo "▶ Installing Claude CLI..."
-  curl -fsSL https://claude.ai/install.sh | bash
-  jq '. + {"hasCompletedOnboarding": true}' ~/.claude.json
-  echo "✓ Claude CLI ready, type command 'claude' to start using it"
+    echo "▶ Installing Python using pyenv..."
+    curl -fsSL https://pyenv.run | bash
+    echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.zshrc
+    echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.zshrc
+    echo 'eval "$(pyenv init -)"' >> ~/.zshrc
+    source ~/.zshrc
+    pyenv install 3.12
+    pyenv global 3.12
+    echo "✓ Python installation completed, version: $(python --version)"
 }
 
 install_nodejs() {
@@ -149,6 +157,20 @@ install_nodejs() {
     source ~/.zshrc
     nvm install --lts
     echo "✓ Node.js installation completed, version: $(node --version)"
+}
+
+install_claude() {
+  set -e
+
+  if command -v claude >/dev/null 2>&1; then
+    echo "✓ Claude CLI already installed, skipping installation"
+    return 0
+  fi
+
+  echo "▶ Installing Claude CLI..."
+  curl -fsSL https://claude.ai/install.sh | bash
+  jq '. + {"hasCompletedOnboarding": true}' ~/.claude.json
+  echo "✓ Claude CLI ready, type command 'claude' to start using it"
 }
 
 install_gemini_cli() {
@@ -187,6 +209,16 @@ install_codex() {
     echo "✓ Codex CLI ready, type command 'codex' to start using it"
 }
 EOF
+#endregion
+
+#region Install Python if needed
+ARG PYTHON_PREINSTALLED=false
+USER ${USERNAME}
+RUN if [ "${PYTHON_PREINSTALLED}" = "true" ]; then \
+      echo "==> PYTHON_PREINSTALLED is set to true, installing Python..." \
+      && source ~/.zshrc \
+      && install_python; \
+    fi
 #endregion
 
 #region Install Claude CLI if needed
