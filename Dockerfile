@@ -1,4 +1,4 @@
-FROM letsdone/devcontainer-base:0.1.0-all
+FROM letsdone/devcontainer-base:0.1.1-all
 USER root
 
 ARG USERNAME=dev
