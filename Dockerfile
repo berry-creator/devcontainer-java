@@ -1,5 +1,12 @@
-FROM letsdone/devcontainer-base:0.1.1-all
+FROM letsdone/devcontainer-base:0.1.3-all
 USER root
+
+#region Add basic packages
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends mariadb-client chromium \
+    && apt-get autoremove -y && apt-get clean -y
+#endregion
 
 ARG USERNAME=dev
 #region Install JDK and set up env
